@@ -61,6 +61,8 @@ class CustomOAuth
 			'?client_id=' + config.clientId +
 			'&redirect_uri=' + OAuth._redirectUri(@name, config) +
 			'&response_type=code' +
+			'&duration=permanent' +
+			'&scope=identity' +
 			'&state=' + OAuth._stateParam(loginStyle, credentialToken, options.redirectUrl)
 
 		OAuth.launchLogin

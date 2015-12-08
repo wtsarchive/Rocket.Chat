@@ -54,6 +54,7 @@ class CustomOAuth
 		response = undefined
 		try
 			response = HTTP.post @tokenPath,
+				auth: config.clientId + ':' + OAuth.openSecret(config.secret)
 				headers:
 					Accept: 'application/json'
 					'User-Agent': @userAgent
@@ -78,9 +79,8 @@ class CustomOAuth
 		try
 			response = HTTP.get @identityPath,
 				headers:
+					'Authorization': 'Bearer ' + accessToken,
 					'User-Agent': @userAgent # http://doc.gitlab.com/ce/api/users.html#Current-user
-				params:
-					access_token: accessToken
 
 			return response.data
 
@@ -95,6 +95,10 @@ class CustomOAuth
 			console.log 'at:', accessToken
 
 			identity = self.getIdentity accessToken
+
+			# Fix for Reddit
+			if identity?.result
+				identity = identity.result
 
 			# Fix WordPress-like identities having 'ID' instead of 'id'
 			if identity?.ID and not identity.id

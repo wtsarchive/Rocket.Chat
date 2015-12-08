@@ -1,8 +1,8 @@
 <template name="oembedYoutubeWidget">
 	{{#if parsedUrl}}
-		<blockquote>
+		<blockquote class="youtube-embed">
 			<a href="{{url}}">{{parsedUrl.host}}</a><br>
-			<iframe width="355" height="200" src="{{meta.twitterPlayer}}" frameborder="0" allowfullscreen></iframe><br>
+			<iframe width="355" height="200" src="{{meta.twitterPlayer}}" frameborder="0" allowfullscreen style="pointer-events: none; cursor: pointer; opacity: 0.8"></iframe><br>
 			{{{meta.description}}}
 		</blockquote>
 	{{/if}}

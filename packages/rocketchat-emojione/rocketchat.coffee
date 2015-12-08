@@ -7,6 +7,10 @@ RocketChat.emoji.list = emojione.emojioneList
 # RocketChat.emoji.class is the name of the registered class for emojis
 RocketChat.emoji.class = 'Emojione'
 
+# Emoji substitutions
+RocketChat.emoji.asciiList[":)"] = "1f642"
+RocketChat.emoji.asciiList[":D"] = "1f604"
+
 # Additional settings -- ascii emojis
 Meteor.startup ->
 	Tracker.autorun ->
