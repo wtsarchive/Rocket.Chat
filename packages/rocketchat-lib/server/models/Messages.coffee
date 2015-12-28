@@ -24,6 +24,14 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @find query, options
 
+	findVisibleByMentionAndRoomId: (username, rid, options) ->
+		query =
+			_hidden: { $ne: true }
+			"mentions.username": username
+			"rid": rid
+
+		return @find query, options
+
 	findVisibleByRoomId: (roomId, options) ->
 		query =
 			_hidden:
@@ -148,6 +156,8 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 				msg: ''
 				t: 'rm'
 				urls: []
+				mentions: []
+				attachments: []
 				editedAt: new Date()
 				editedBy:
 					_id: Meteor.userId()
@@ -269,6 +279,16 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 	createRoomRenamedWithRoomIdRoomNameAndUser: (roomId, roomName, user, extraData) ->
 		return @createWithTypeRoomIdMessageAndUser 'r', roomId, roomName, user, extraData
 
+	createCommandWithRoomIdAndUser: (command, roomId, user, extraData) ->
+		return @createWithTypeRoomIdMessageAndUser 'command', roomId, command, user, extraData
+
+	createUserMutedWithRoomIdAndUser: (roomId, user, extraData) ->
+		message = user.username
+		return @createWithTypeRoomIdMessageAndUser 'user-muted', roomId, message, user, extraData
+
+	createUserUnmutedWithRoomIdAndUser: (roomId, user, extraData) ->
+		message = user.username
+		return @createWithTypeRoomIdMessageAndUser 'user-unmuted', roomId, message, user, extraData
 
 	# REMOVE
 	removeById: (_id) ->
