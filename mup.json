@@ -27,7 +27,7 @@
 
   // Configure environment
   "env": {
-    "ROOT_URL": "http://chat.wtsarchive.com",
+    "ROOT_URL": "https://chat.wtsarchive.com",
     "PORT": 8001,
     "KADIRA_APP_ID": "rbwt63wb6Mq7CoEkZ",
     "KADIRA_APP_SECRET": "0a7ec0ae-7a84-4390-a32a-fd2d1d89b0b0"
