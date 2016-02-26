@@ -82,7 +82,10 @@ class CustomOAuth
 					'Authorization': 'Bearer ' + accessToken,
 					'User-Agent': @userAgent # http://doc.gitlab.com/ce/api/users.html#Current-user
 
-			return response.data
+			if response.data
+				return response.data
+			else
+				return JSON.parse response.content
 
 		catch err
 			error = new Error("Failed to fetch identity from #{@name} at #{@identityPath}. " + err.message)
