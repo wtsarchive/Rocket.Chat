@@ -1,3 +1,5 @@
+/* globals Push */
+
 RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 	// skips this callback if the message was edited
 	if (message.editedAt) {
@@ -9,7 +11,14 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 	/*
 	Increment unread couter if direct messages
 	 */
-	var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+	var indexOf = [].indexOf || function(item) {
+		for (var i = 0, l = this.length; i < l; i++) {
+			if (i in this && this[i] === item) {
+				return i;
+			}
+		}
+		return -1;
+	};
 
 	var settings, desktopMentionIds, i, j, len, len1, highlights, mentionIds, highlightsIds, usersWithHighlights, mobileMentionIds, ref, ref1, toAll, userIdsToNotify, userIdsToPushNotify, userOfMention, userOfMentionId, usersOfDesktopMentions, usersOfMentionId, usersOfMentionItem, usersOfMobileMentions;
 
@@ -39,7 +48,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 	 * @returns {boolean}
 	 */
 	function messageContainsHighlight(message, highlights) {
-		if (! highlights || highlights.length == 0) { return false; }
+		if (! highlights || highlights.length === 0) { return false; }
 
 		var has = false;
 		highlights.some(function (highlight) {
@@ -55,36 +64,50 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 
 	settings = {};
 
-	settings.alwaysNotifyDesktopUsers = _.compact(_.map(RocketChat.models.Subscriptions.findAlwaysNotifyDesktopUsersByRoomId(room._id).fetch(), function(subscription) {
-		var ref;
-		return subscription != null ? (ref = subscription.u) != null ? ref._id : void 0 : void 0;
-	}));
-
-	settings.dontNotifyDesktopUsers = _.compact(_.map(RocketChat.models.Subscriptions.findDontNotifyDesktopUsersByRoomId(room._id).fetch(), function(subscription) {
-		var ref;
-		return subscription != null ? (ref = subscription.u) != null ? ref._id : void 0 : void 0;
-	}));
-
-	settings.alwaysNotifyMobileUsers = _.compact(_.map(RocketChat.models.Subscriptions.findAlwaysNotifyMobileUsersByRoomId(room._id).fetch(), function(subscription) {
-		var ref;
-		return subscription != null ? (ref = subscription.u) != null ? ref._id : void 0 : void 0;
-	}));
-
-	settings.dontNotifyMobileUsers = _.compact(_.map(RocketChat.models.Subscriptions.findDontNotifyMobileUsersByRoomId(room._id).fetch(), function(subscription) {
-		var ref;
-		return subscription != null ? (ref = subscription.u) != null ? ref._id : void 0 : void 0;
-	}));
+	settings.alwaysNotifyDesktopUsers = [];
+	settings.dontNotifyDesktopUsers = [];
+	settings.alwaysNotifyMobileUsers = [];
+	settings.dontNotifyMobileUsers = [];
+	RocketChat.models.Subscriptions.findNotificationPreferencesByRoom(room._id).forEach(function(subscription) {
+		if (subscription.desktopNotifications === 'all') {
+			settings.alwaysNotifyDesktopUsers.push(subscription.u._id);
+		} else if (subscription.desktopNotifications === 'nothing') {
+			settings.dontNotifyDesktopUsers.push(subscription.u._id);
+		} else if (subscription.mobilePushNotifications === 'all') {
+			settings.alwaysNotifyMobileUsers.push(subscription.u._id);
+		} else if (subscription.mobilePushNotifications === 'nothing') {
+			settings.dontNotifyMobileUsers.push(subscription.u._id);
+		}
+	});
 
 	userIdsToNotify = [];
 	userIdsToPushNotify = [];
 	usersWithHighlights = [];
-	highlights = RocketChat.models.Users.findUsersByUsernames(room.usernames, { fields: { '_id': 1, 'settings.preferences.highlights': 1 }}).fetch();
+	highlights = RocketChat.models.Users.findUsersByUsernamesWithHighlights(room.usernames, { fields: { '_id': 1, 'settings.preferences.highlights': 1 }}).fetch();
 
 	highlights.forEach(function (user) {
 		if (user && user.settings && user.settings.preferences && messageContainsHighlight(message, user.settings.preferences.highlights)) {
 			usersWithHighlights.push(user);
 		}
 	});
+
+	let push_message;
+	//Set variables depending on Push Notification settings
+	if (RocketChat.settings.get('Push_show_message')) {
+		push_message = message.msg;
+	} else {
+		push_message = ' ';
+	}
+
+	let push_username;
+	let push_room;
+	if (RocketChat.settings.get('Push_show_username_room')) {
+		push_username = '@' + user.username;
+		push_room = '#' + room.name + ' ';
+	} else {
+		push_username = ' ';
+		push_room = ' ';
+	}
 
 	if ((room.t == null) || room.t === 'd') {
 		userOfMentionId = message.rid.replace(message.u._id, '');
@@ -98,7 +121,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 		});
 		if ((userOfMention != null) && canBeNotified(userOfMentionId, 'mobile')) {
 			RocketChat.Notifications.notifyUser(userOfMention._id, 'notification', {
-				title: "@" + user.username,
+				title: '@' + user.username,
 				text: message.msg,
 				payload: {
 					rid: message.rid,
@@ -112,10 +135,11 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 			if (Push.enabled === true && userOfMention.statusConnection !== 'online') {
 				Push.send({
 					from: 'push',
-					title: "@" + user.username,
-					text: message.msg,
+					title: push_username,
+					text: push_message,
 					apn: {
-						text: "@" + user.username + ":\n" + message.msg
+						// ternary operator
+						text: push_username + ((push_username !== ' ' && push_message !== ' ') ? ':\n' : '') + push_message
 					},
 					badge: 1,
 					sound: 'chime',
@@ -225,7 +249,7 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 			for (j = 0, len1 = userIdsToNotify.length; j < len1; j++) {
 				usersOfMentionId = userIdsToNotify[j];
 				RocketChat.Notifications.notifyUser(usersOfMentionId, 'notification', {
-					title: "@" + user.username + " @ #" + room.name,
+					title: '@' + user.username + ' @ #' + room.name,
 					text: message.msg,
 					payload: {
 						rid: message.rid,
@@ -241,10 +265,11 @@ RocketChat.callbacks.add('afterSaveMessage', function(message, room) {
 			if (Push.enabled === true) {
 				Push.send({
 					from: 'push',
-					title: "@" + user.username + " @ #" + room.name,
-					text: message.msg,
+					title: push_room + push_username,
+					text: push_message,
 					apn: {
-						text: "@" + user.username + " @ #" + room.name + ":\n" + message.msg
+						// ternary operator
+						text: push_room + push_username + ((push_username !== ' ' && push_room !== ' ' && push_message !== ' ') ? ':\n' : '') + push_message
 					},
 					badge: 1,
 					sound: 'chime',

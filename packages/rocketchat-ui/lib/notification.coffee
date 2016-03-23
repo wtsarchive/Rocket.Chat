@@ -10,13 +10,14 @@
 				if Notification.permission != status
 					Notification.permission = status
 
-	# notificacoes HTML5
-	_showDesktop: (notification) ->
+	notify: (notification) ->
 		if window.Notification && Notification.permission == "granted"
-			getAvatarAsPng notification.payload.sender.username, (avatarImage) ->
+			message = { rid: notification.payload?.rid, msg: notification.text, notification: true }
+			RocketChat.promises.run('onClientMessageReceived', message).then (message) ->
 				n = new Notification notification.title,
-					icon: avatarImage
-					body: _.stripTags(notification.text)
+					icon: notification.icon or getAvatarUrlFromUsername notification.payload.sender.username
+					body: _.stripTags(message.msg)
+					silent: true
 
 				if notification.payload?.rid?
 					n.onclick = ->
@@ -31,7 +32,12 @@
 
 	showDesktop: (notification) ->
 		if not window.document.hasFocus?() and Meteor.user().status isnt 'busy'
-			KonchatNotification._showDesktop(notification)
+			if Meteor.settings.public.sandstorm
+				KonchatNotification.notify(notification)
+			else
+				getAvatarAsPng notification.payload.sender.username, (avatarAsPng) ->
+					notification.icon = avatarAsPng
+					KonchatNotification.notify(notification)
 
 	newMessage: ->
 		unless Session.equals('user_' + Meteor.userId() + '_status', 'busy') or Meteor.user()?.settings?.preferences?.disableNewMessageNotification

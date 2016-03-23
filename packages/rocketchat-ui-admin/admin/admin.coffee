@@ -51,6 +51,9 @@ Template.admin.helpers
 		return sectionsArray
 
 	isDisabled: ->
+		if @blocked
+			return { disabled: 'disabled' }
+
 		if not @enableQuery?
 			return {}
 
@@ -105,7 +108,7 @@ Template.admin.helpers
 		description = TAPi18n.__ @i18nDescription if @i18nDescription
 		if description? and description isnt @i18nDescription
 			return description
-	sectionIsCustomOath: (section) ->
+	sectionIsCustomOAuth: (section) ->
 		return /^Custom OAuth:\s.+/.test section
 	callbackURL: (section) ->
 		id = s.strRight(section, 'Custom OAuth: ').toLowerCase()
@@ -115,6 +118,37 @@ Template.admin.helpers
 
 	random: ->
 		return Random.id()
+
+	getEditorOptions: ->
+		return {} =
+			lineNumbers: true
+			mode: this.code or "javascript"
+			gutters: [
+				"CodeMirror-linenumbers"
+				"CodeMirror-foldgutter"
+			]
+			foldGutter: true
+			matchBrackets: true
+			autoCloseBrackets: true
+			matchTags: true,
+			showTrailingSpace: true
+			highlightSelectionMatches: true
+
+	setEditorOnBlur: (_id) ->
+		Meteor.defer ->
+			codeMirror = $('.code-mirror-box[data-editor-id="'+_id+'"] .CodeMirror')[0].CodeMirror
+			codeMirror.on 'change', ->
+				value = codeMirror.getValue()
+				TempSettings.update {_id: _id},
+					$set:
+						value: value
+						changed: Settings.findOne(_id).value isnt value
+		return
+
+	assetAccept: (fileConstraints) ->
+		if fileConstraints.extensions?.length > 0
+			return '.' + fileConstraints.extensions.join(', .')
+
 
 Template.admin.events
 	"change .input-monitor": (e, t) ->
@@ -217,6 +251,8 @@ Template.admin.events
 	"click .expand": (e) ->
 		$(e.currentTarget).closest('.section').removeClass('section-collapsed')
 		$(e.currentTarget).closest('button').removeClass('expand').addClass('collapse').find('span').text(TAPi18n.__ "Collapse")
+		$('.code-mirror-box .CodeMirror').each (index, codeMirror) ->
+			codeMirror.CodeMirror.refresh()
 
 	"click .collapse": (e) ->
 		$(e.currentTarget).closest('.section').addClass('section-collapsed')
@@ -234,6 +270,16 @@ Template.admin.events
 			args = [data.message].concat data.params
 
 			toastr.success TAPi18n.__.apply(TAPi18n, args), TAPi18n.__('Success')
+
+	"click .button-fullscreen": ->
+		codeMirrorBox = $('.code-mirror-box[data-editor-id="'+this._id+'"]')
+		codeMirrorBox.addClass('code-mirror-box-fullscreen')
+		codeMirrorBox.find('.CodeMirror')[0].CodeMirror.refresh()
+
+	"click .button-restore": ->
+		codeMirrorBox = $('.code-mirror-box[data-editor-id="'+this._id+'"]')
+		codeMirrorBox.removeClass('code-mirror-box-fullscreen')
+		codeMirrorBox.find('.CodeMirror')[0].CodeMirror.refresh()
 
 
 Template.admin.onRendered ->

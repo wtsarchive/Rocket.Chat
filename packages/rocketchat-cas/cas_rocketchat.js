@@ -1,8 +1,11 @@
+logger = new Logger('CAS', {});
+
 Meteor.startup(function(){
     RocketChat.settings.addGroup('CAS', function() {
         this.add("CAS_enabled", false, { type: 'boolean', group: 'CAS', public: true });
         this.add("CAS_base_url" , '' , { type: 'string' , group: 'CAS', public: true });
         this.add("CAS_login_url" , '' , { type: 'string' , group: 'CAS', public: true });
+        this.add("CAS_version" , '1.0' , { type: 'select', values: [{ key: '1.0', i18nLabel: '1.0'}], group: 'CAS' });
 
         this.section('CAS Login Layout', function() {
             this.add("CAS_popup_width" , '810' , { type: 'string' , group: 'CAS', public: true });
@@ -23,7 +26,6 @@ function updateServices(record) {
     }
 
     timer = Meteor.setTimeout(function() {
-        console.log("Updating login service CAS".blue)
         data = {
             // These will pe passed to 'node-cas' as options
             enabled:          RocketChat.settings.get("CAS_enabled"),
@@ -40,8 +42,10 @@ function updateServices(record) {
 
         // Either register or deregister the CAS login service based upon its configuration
         if( data.enabled ) {
+            logger.info("Enabling CAS login service")
             ServiceConfiguration.configurations.upsert({service: 'cas'}, { $set: data });
         } else {
+            logger.info("Disabling CAS login service");
             ServiceConfiguration.configurations.remove({service: 'cas'});
         }
     }, 2000);
