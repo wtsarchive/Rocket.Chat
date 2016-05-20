@@ -10,26 +10,26 @@
 				<div class="search">
 					<form class="search-form" role="form">
 						<div class="input-line search">
-							<input type="text" id="channel-search" class="search" placeholder="{{_ "Search_Channels"}}" autocomplete="off" />
-							<i class="icon-right-open-small"></i>
+							<select class="c-select" id="show">
+								<option value="joined" selected="{{showSelected 'joined'}}">{{_ "Joined"}}</option>
+								<option value="all" selected="{{showSelected 'all'}}">{{_ "All"}}</option>
+							</select>
+							<i class="icon-comment"></i>
 						</div>
 						<div class="input-line search">
-							<select class="c-select" id="sort-channels" style="display: none">
+							<select class="c-select" id="sort-channels">
 								<option value="name" selected="{{sortChannelsSelected 'name'}}">{{_ "Name"}}</option>
 								<option value="msgs" selected="{{sortChannelsSelected 'msgs'}}">{{_ "Number_of_messages"}}</option>
 							</select>
-							<select class="c-select" id="sort-subscriptions">
+							<select class="c-select" id="sort-subscriptions" style="display: none">
 								<option value="name" selected="{{sortSubscriptionsSelected 'name'}}">{{_ "Name"}}</option>
 								<option value="ls" selected="{{sortSubscriptionsSelected 'ls'}}">{{_ "Last_seen"}}</option>
 							</select>
 							<i class="icon-sort-alt-up"></i>
 						</div>
 						<div class="input-line search">
-							<select class="c-select" id="show">
-								<option value="joined" selected="{{showSelected 'joined'}}">{{_ "Joined"}}</option>
-								<option value="all" selected="{{showSelected 'all'}}">{{_ "All"}}</option>
-							</select>
-							<i class="icon-comment"></i>
+							<input type="text" id="channel-search" class="search" placeholder="{{_ "Search_Channels"}}" autocomplete="off" />
+							<i class="icon-right-open-small"></i>
 						</div>
 					</form>
 				</div>
@@ -55,7 +55,7 @@
 			{{#if hasMore}}
 				<li class="load-more">
 					{{#if Template.subscriptionsReady}}
-						<a href="">{{_ "Has_more"}}...</a>
+						<button>{{_ "Has_more"}}...</button>
 					{{else}}
 						<div class="load-more-loading">{{_ "Loading..."}}</div>
 					{{/if}}

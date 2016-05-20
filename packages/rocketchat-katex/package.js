@@ -16,25 +16,17 @@ Package.onUse(function(api) {
 
 	api.addFiles('settings.coffee', 'server');
 	api.addFiles('katex.coffee');
-	api.addFiles('client/lib/katex.min.js', 'client');
-	api.addFiles('client/katex.min.css', 'client');
+	api.addFiles('client/katex/katex.min.js', 'client');
+	api.addFiles('client/katex/katex.min.css', 'client');
 	api.addFiles('client/style.css', 'client');
 
 	var _ = Npm.require('underscore');
 	var fs = Npm.require('fs');
-	var fontFiles = _.map(fs.readdirSync('packages/rocketchat-katex/client/fonts'), function(filename) {
-	  return 'client/fonts/' + filename;
+	var fontFiles = _.map(fs.readdirSync('packages/rocketchat-katex/client/katex/fonts'), function(filename) {
+		return 'client/katex/fonts/' + filename;
 	});
 
 	api.addAssets(fontFiles, 'client');
-
-	tapi18nFiles = _.compact(_.map(fs.readdirSync('packages/rocketchat-katex/i18n'), function(filename) {
-		if (fs.statSync('packages/rocketchat-katex/i18n/' + filename).size > 16) {
-			return 'i18n/' + filename;
-		}
-	}));
-	api.use('tap:i18n');
-	api.addFiles(tapi18nFiles);
 });
 
 Package.onTest(function(api) {

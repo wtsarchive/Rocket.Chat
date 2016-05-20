@@ -10,7 +10,7 @@ Package.onUse(function(api) {
 
 	api.use([
 		'coffeescript',
-		'emojione:emojione@2.1.2',
+		'emojione:emojione',
 		'rocketchat:lib'
 	]);
 	api.use('rocketchat:theme');
@@ -21,7 +21,7 @@ Package.onUse(function(api) {
 	api.use('ecmascript');
 	api.use('less@2.5.1');
 
-	api.addFiles('emojione.coffee', ['server','client']);
+	api.addFiles('emojione.coffee', ['server', 'client']);
 	api.addFiles('rocketchat.coffee', 'client');
 
 	api.addFiles('emojiPicker.html', 'client');
@@ -33,15 +33,5 @@ Package.onUse(function(api) {
 	api.addFiles('lib/EmojiPicker.js', 'client');
 	api.addFiles('emojiButton.js', 'client');
 
-	api.addAssets('category_icons/activity.svg', 'client');
-	api.addAssets('category_icons/flags.svg', 'client');
-	api.addAssets('category_icons/foods.svg', 'client');
-	api.addAssets('category_icons/nature.svg', 'client');
-	api.addAssets('category_icons/objects.svg', 'client');
-	api.addAssets('category_icons/people.svg', 'client');
-	api.addAssets('category_icons/recent.svg', 'client');
-	api.addAssets('category_icons/symbols.svg', 'client');
-	api.addAssets('category_icons/travel.svg', 'client');
-
-	api.export('EmojiPicker');
+	api.addFiles('sprites.css', 'client');
 });

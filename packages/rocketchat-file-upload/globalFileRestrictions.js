@@ -1,7 +1,9 @@
+/* globals Slingshot */
+
 Slingshot.fileRestrictions('rocketchat-uploads', {
-	authorize: function(file, metaContext) {
+	authorize: function(file/*, metaContext*/) {
 		if (!RocketChat.fileUploadIsValidContentType(file.type)) {
-			throw new Meteor.Error(TAPi18n.__('Invalid_file_type'));
+			throw new Meteor.Error(TAPi18n.__('error-invalid-file-type'));
 		}
 
 		var maxFileSize = RocketChat.settings.get('FileUpload_MaxFileSize');

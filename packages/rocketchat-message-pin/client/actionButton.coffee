@@ -3,49 +3,73 @@ Meteor.startup ->
 		id: 'pin-message'
 		icon: 'icon-pin'
 		i18nLabel: 'Pin_Message'
+		context: [
+			'pinned'
+			'message'
+			'message-mobile'
+		]
 		action: (event, instance) ->
 			message = @_arguments[1]
 			message.pinned = true
 			Meteor.call 'pinMessage', message, (error, result) ->
 				if error
-					return toastr.error error.reason
+					return handleError(error)
 		validation: (message) ->
 			if message.pinned or not RocketChat.settings.get('Message_AllowPinning')
 				return false
 
-			if RocketChat.settings.get('Message_AllowPinningByAnyone') or RocketChat.authz.hasRole Meteor.userId(), 'admin'
-				return true
+			return RocketChat.authz.hasAtLeastOnePermission 'pin-message', message.rid
 
-			return ChatRoom.findOne(message.rid).u?._id is Meteor.userId()
 		order: 20
 
 	RocketChat.MessageAction.addButton
 		id: 'unpin-message'
 		icon: 'icon-pin rotate-45'
 		i18nLabel: 'Unpin_Message'
+		context: [
+			'pinned'
+			'message'
+			'message-mobile'
+		]
 		action: (event, instance) ->
 			message = @_arguments[1]
 			message.pinned = false
 			Meteor.call 'unpinMessage', message, (error, result) ->
 				if error
-					return toastr.error error.reason
+					return handleError(error)
 		validation: (message) ->
 			if not message.pinned or not RocketChat.settings.get('Message_AllowPinning')
 				return false
 
-			if RocketChat.settings.get('Message_AllowPinningByAnyone') or RocketChat.authz.hasRole Meteor.userId(), 'admin'
-				return true
+			return RocketChat.authz.hasAtLeastOnePermission 'pin-message', message.rid
 
-			return ChatRoom.findOne(message.rid).u?._id is Meteor.userId()
 		order: 21
 
 	RocketChat.MessageAction.addButton
 		id: 'jump-to-pin-message'
 		icon: 'icon-right-hand'
 		i18nLabel: 'Jump_to_message'
+		context: [
+			'pinned'
+		]
 		action: (event, instance) ->
 			message = @_arguments[1]
 			$('.message-dropdown:visible').hide()
 			RoomHistoryManager.getSurroundingMessages(message, 50)
 		order: 100
 
+	RocketChat.MessageAction.addButton
+		id: 'permalink-pinned'
+		icon: 'icon-link'
+		i18nLabel: 'Permalink'
+		classes: 'clipboard'
+		context: [
+			'pinned'
+		]
+		action: (event, instance) ->
+			message = @_arguments[1]
+			msg = $(event.currentTarget).closest('.message')[0]
+			$("\##{msg.id} .message-dropdown").hide()
+			$(event.currentTarget).attr('data-clipboard-text', document.location.origin + document.location.pathname + '?msg=' + msg.id);
+			toastr.success(TAPi18n.__('Copied'))
+		order: 101

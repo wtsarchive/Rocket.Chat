@@ -36,6 +36,9 @@ Template.listChannelsFlex.events
 			t.limit.set(t.limit.get() + 50)
 	, 200
 
+	'submit .search-form': (e) ->
+		e.preventDefault()
+
 	'keyup #channel-search': _.debounce (e, instance) ->
 		instance.nameFilter.set($(e.currentTarget).val())
 	, 300
@@ -61,9 +64,9 @@ Template.listChannelsFlex.onCreated ->
 	@hasMore = new ReactiveVar true
 	@limit = new ReactiveVar 50
 	@nameFilter = new ReactiveVar ''
-	@sortChannels = new ReactiveVar 'msgs'
+	@sortChannels = new ReactiveVar 'name'
 	@sortSubscriptions = new ReactiveVar 'name'
-	@show = new ReactiveVar 'joined'
+	@show = new ReactiveVar 'all'
 
 	@autorun =>
 		if @show.get() is 'joined'

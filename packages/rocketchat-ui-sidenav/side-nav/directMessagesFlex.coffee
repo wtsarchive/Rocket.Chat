@@ -45,6 +45,8 @@ Template.directMessagesFlex.events
 
 	'keydown input[type="text"]': (e, instance) ->
 		Template.instance().error.set([])
+		if e.keyCode is 13
+			instance.$('.save-direct-message').click()
 
 	'click .save-direct-message': (e, instance) ->
 		err = SideNav.validate()
@@ -54,7 +56,7 @@ Template.directMessagesFlex.events
 
 			Meteor.call 'createDirectMessage', username, (err, result) ->
 				if err
-					return toastr.error err.reason
+					return handleError(err)
 				SideNav.closeFlex()
 				instance.clearForm()
 				FlowRouter.go 'direct', { username: username }

@@ -1,13 +1,14 @@
-/* globals EmojiPicker:true, emojione, Blaze, Template */
-EmojiPicker = {
+/* globals emojione, Blaze, Template */
+RocketChat.EmojiPicker = {
 	width: 390,
-	height: 203,
+	height: 238,
 	initiated: false,
 	input: null,
 	source: null,
 	recent: [],
 	tone: null,
 	opened: false,
+	pickCallback: null,
 	init() {
 		if (this.initiated) {
 			return;
@@ -23,7 +24,7 @@ EmojiPicker = {
 			if (!this.opened) {
 				return;
 			}
-			if(!$(event.target).closest('.emoji-picker').length && !$(event.target).is('.emoji-picker')) {
+			if (!$(event.target).closest('.emoji-picker').length && !$(event.target).is('.emoji-picker')) {
 				if (this.opened) {
 					this.close();
 				}
@@ -52,44 +53,46 @@ EmojiPicker = {
 	},
 	setPosition() {
 		let sourcePos = $(this.source).offset();
-		let left = (sourcePos.left - this.width + 50);
+		let left = (sourcePos.left - this.width + 65);
+		let top = (sourcePos.top - this.height - 5);
 
 		if (left < 0) {
-			left = 0;
+			left = 10;
 		}
+		if (top < 0) {
+			top = 10;
+		}
+
 		return $('.emoji-picker')
 			.css({
-				top: (sourcePos.top - this.height - 10) + 'px',
+				top: top + 'px',
 				left: left + 'px'
 			});
 	},
-	open(source, input) {
+	open(source, callback) {
 		if (!this.initiated) {
 			this.init();
 		}
-		this.input = input;
+		this.pickCallback = callback;
 		this.source = source;
 
-		this.setPosition().addClass('show');
+		const containerEl = this.setPosition();
+		containerEl.addClass('show');
 
+		setTimeout(() => {
+			const emojiInput = containerEl.find('.emoji-filter input.search');
+			if (emojiInput) {
+				emojiInput.focus();
+			}
+		}, 100);
 		this.opened = true;
 	},
 	close() {
 		$('.emoji-picker').removeClass('show');
 		this.opened = false;
 	},
-	insertEmoji(emoji) {
-		let emojiValue = ':' + emoji + ':';
-
-		var caretPos = this.input.prop('selectionStart');
-		var textAreaTxt = this.input.val();
-
-		this.input.val(textAreaTxt.substring(0, caretPos) + emojiValue + textAreaTxt.substring(caretPos) );
-
-		this.input.focus();
-
-		this.input.prop('selectionStart', caretPos + emojiValue.length);
-		this.input.prop('selectionEnd', caretPos + emojiValue.length);
+	pickEmoji(emoji) {
+		this.pickCallback(emoji);
 
 		this.close();
 		this.addRecent(emoji);

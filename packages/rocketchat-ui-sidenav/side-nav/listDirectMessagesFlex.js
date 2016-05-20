@@ -39,6 +39,10 @@ Template.listDirectMessagesFlex.events({
 		SideNav.leaveArrow();
 	},
 
+	'submit .search-form': function(e) {
+		e.preventDefault();
+	},
+
 	'keyup #channel-search': _.debounce((e, instance) => {
 		instance.nameFilter.set($(e.currentTarget).val());
 	}, 300),
@@ -47,7 +51,7 @@ Template.listDirectMessagesFlex.events({
 		if (instance.hasMore.get() && e.target.scrollTop >= e.target.scrollHeight - e.target.clientHeight) {
 			instance.limit.set(instance.limit.get() + 50);
 		}
-	} , 200),
+	}, 200),
 
 	'change #sort': (e, instance) => {
 		instance.sort.set($(e.currentTarget).val());
@@ -67,7 +71,7 @@ Template.listDirectMessagesFlex.onCreated(function() {
 		if (_.isNumber(this.limit.get())) {
 			options.limit = this.limit.get();
 		}
-		if(s.trim(this.sort.get())) {
+		if (s.trim(this.sort.get())) {
 			switch (this.sort.get()) {
 				case 'name':
 					options.sort = { name: 1 };

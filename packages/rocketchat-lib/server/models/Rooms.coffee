@@ -47,8 +47,11 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 
 	# FIND
-	findById: (roomId) ->
+	findById: (roomId, options) ->
 		return @find { _id: roomId }, options
+
+	findByIds: (roomIds, options) ->
+		return @find { _id: $in: [].concat roomIds }, options
 
 	findByType: (type, options) ->
 		query =
@@ -84,6 +87,21 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 	findByNameContainingAndTypes: (name, types, options) ->
 		nameRegex = new RegExp s.trim(s.escapeRegExp(name)), "i"
+
+		query =
+			t:
+				$in: types
+			$or: [
+				name: nameRegex
+			,
+				t: 'd'
+				usernames: nameRegex
+			]
+
+		return @find query, options
+
+	findByNameStartingAndTypes: (name, types, options) ->
+		nameRegex = new RegExp "^" + s.trim(s.escapeRegExp(name)), "i"
 
 		query =
 			t:
@@ -158,12 +176,6 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 			query.archived = true
 		else
 			query.archived = { $ne: true }
-
-		return @find query, options
-
-	findByVisitorToken: (visitorToken, options) ->
-		query =
-			"v.token": visitorToken
 
 		return @find query, options
 
@@ -373,6 +385,32 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 				default: defaultValue is 'true'
 
 		return @update query, update
+
+	saveRoomById: (_id, data) ->
+		setData = {}
+		unsetData = {}
+
+		if data.topic?
+			if not _.isEmpty(s.trim(data.topic))
+				setData.topic = s.trim(data.topic)
+			else
+				unsetData.topic = 1
+
+		if data.tags?
+			if not _.isEmpty(s.trim(data.tags))
+				setData.tags = s.trim(data.tags).split(',').map((tag) => return s.trim(tag))
+			else
+				unsetData.tags = 1
+
+		update = {}
+
+		if not _.isEmpty setData
+			update.$set = setData
+
+		if not _.isEmpty unsetData
+			update.$unset = unsetData
+
+		return @update { _id: _id }, update
 
 	# INSERT
 	createWithTypeNameUserAndUsernames: (type, name, user, usernames, extraData) ->

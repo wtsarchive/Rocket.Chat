@@ -3,12 +3,16 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 		@_initModel 'message'
 
 		@tryEnsureIndex { 'rid': 1, 'ts': 1 }
+		@tryEnsureIndex { 'ts': 1 }
+		@tryEnsureIndex { 'u._id': 1 }
 		@tryEnsureIndex { 'editedAt': 1 }, { sparse: 1 }
 		@tryEnsureIndex { 'editedBy._id': 1 }, { sparse: 1 }
 		@tryEnsureIndex { 'rid': 1, 't': 1, 'u._id': 1 }
 		@tryEnsureIndex { 'expireAt': 1 }, { expireAfterSeconds: 0 }
 		@tryEnsureIndex { 'msg': 'text' }
 		@tryEnsureIndex { 'file._id': 1 }, { sparse: 1 }
+		@tryEnsureIndex { 'mentions.username': 1 }, { sparse: 1 }
+		@tryEnsureIndex { 'pinned': 1 }, { sparse: 1 }
 
 
 	# FIND ONE
@@ -97,8 +101,6 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 			_hidden: { $ne: true }
 			'starred._id': userId
 			rid: roomId
-
-		console.log 'findStarredByUserAtRoom', arguments
 
 		return @find query, options
 
@@ -253,6 +255,17 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
+	setMessageAttachments: (_id, attachments) ->
+		query =
+			_id: _id
+
+		update =
+			$set:
+				attachments: attachments
+		console.log(query, update);
+		return @update query, update
+
+
 	# INSERT
 	createWithTypeRoomIdMessageAndUser: (type, roomId, message, user, extraData) ->
 		record =
@@ -267,7 +280,7 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		_.extend record, extraData
 
-		record._id = @insert record
+		record._id = @insertOrUpsert record
 		return record
 
 	createUserJoinWithRoomIdAndUser: (roomId, user, extraData) ->
@@ -312,6 +325,14 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 	createOwnerRemovedWithRoomIdAndUser: (roomId, user, extraData) ->
 		message = user.username
 		return @createWithTypeRoomIdMessageAndUser 'owner-removed', roomId, message, user, extraData
+
+	createSubscriptionRoleAddedWithRoomIdAndUser: (roomId, user, extraData) ->
+		message = user.username
+		return @createWithTypeRoomIdMessageAndUser 'subscription-role-added', roomId, message, user, extraData
+
+	createSubscriptionRoleRemovedWithRoomIdAndUser: (roomId, user, extraData) ->
+		message = user.username
+		return @createWithTypeRoomIdMessageAndUser 'subscription-role-removed', roomId, message, user, extraData
 
 	# REMOVE
 	removeById: (_id) ->

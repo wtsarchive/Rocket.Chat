@@ -1,7 +1,4 @@
 Template.createChannelFlex.helpers
-	tRoomMembers: ->
-		return t('Members')
-
 	selectedUsers: ->
 		return Template.instance().selectedUsers.get()
 
@@ -76,6 +73,14 @@ Template.createChannelFlex.events
 	'keydown input[type="text"]': (e, instance) ->
 		Template.instance().error.set([])
 
+	'keyup #channel-name': (e, instance) ->
+		if e.keyCode is 13
+			instance.$('#channel-members').focus()
+
+	'keydown #channel-members': (e, instance) ->
+		if $(e.currentTarget).val() is '' and e.keyCode is 13
+			instance.$('.save-channel').click()
+
 	'click .save-channel': (e, instance) ->
 		err = SideNav.validate()
 		name = instance.find('#channel-name').value.toLowerCase().trim()
@@ -84,17 +89,17 @@ Template.createChannelFlex.events
 			Meteor.call 'createChannel', name, instance.selectedUsers.get(), (err, result) ->
 				if err
 					console.log err
-					if err.error is 'name-invalid'
+					if err.error is 'error-invalid-name'
 						instance.error.set({ invalid: true })
 						return
-					if err.error is 'duplicate-name'
+					if err.error is 'error-duplicate-channel-name'
 						instance.error.set({ duplicate: true })
 						return
-					if err.error is 'archived-duplicate-name'
+					if err.error is 'error-archived-duplicate-name'
 						instance.error.set({ archivedduplicate: true })
 						return
 					else
-						return toastr.error err.reason
+						return handleError(err)
 
 				SideNav.closeFlex ->
 					instance.clearForm()

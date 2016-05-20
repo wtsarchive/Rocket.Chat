@@ -36,6 +36,7 @@ class CustomOAuth
 		@serverURL = options.serverURL
 		@tokenPath = options.tokenPath
 		@identityPath = options.identityPath
+		@tokenSentVia = options.tokenSentVia
 
 		if not /^https?:\/\/.+/.test @tokenPath
 			@tokenPath = @serverURL + @tokenPath
@@ -76,11 +77,19 @@ class CustomOAuth
 			return response.data.access_token
 
 	getIdentity: (accessToken) ->
+		params = {}
+		headers =
+			'User-Agent': @userAgent # http://doc.gitlab.com/ce/api/users.html#Current-user
+
+		if @tokenSentVia is 'header'
+			headers['Authorization'] = 'Bearer ' + accessToken
+		else
+			params['access_token'] = accessToken
+
 		try
 			response = HTTP.get @identityPath,
-				headers:
-					'Authorization': 'Bearer ' + accessToken,
-					'User-Agent': @userAgent # http://doc.gitlab.com/ce/api/users.html#Current-user
+				headers: headers
+				params: params
 
 			if response.data
 				return response.data
@@ -95,7 +104,7 @@ class CustomOAuth
 		self = @
 		OAuth.registerService @name, 2, null, (query) ->
 			accessToken = self.getAccessToken query
-			console.log 'at:', accessToken
+			# console.log 'at:', accessToken
 
 			identity = self.getIdentity accessToken
 
@@ -111,7 +120,7 @@ class CustomOAuth
 			if identity?.user_id and not identity.id
 				identity.id = identity.user_id
 
-			console.log 'id:', JSON.stringify identity, null, '  '
+			# console.log 'id:', JSON.stringify identity, null, '  '
 
 			serviceData =
 				_OAuthCustom: true
@@ -125,7 +134,7 @@ class CustomOAuth
 					profile:
 						name: identity.name or identity.username or identity.nickname
 
-			console.log data
+			# console.log data
 
 			return data
 

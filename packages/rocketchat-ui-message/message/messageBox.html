@@ -1,17 +1,17 @@
 <template name="messageBox">
 	{{#if subscribed}}
 		<form class="message-form" method="post" action="/">
-			<div style="display: flex">
-				<div class="file">
-					<i class="octicon octicon-cloud-upload file"></i>
+			{{> messagePopupConfig getPopupConfig}}
+			<div class="message-input">
+				<div class="message-buttons file">
+					<i class="icon-attach file"></i>
 					<input type="file" accept="{{fileUploadAllowedMediaTypes}}">
 				</div>
 				<div class="input-message-container">
-					{{> messagePopupConfig getPopupConfig}}
 					<textarea dir="auto" name="msg" maxlength="{{maxMessageLength}}" class="input-message autogrow-short" placeholder="{{_ 'Message'}}"></textarea>
 
 					<div class="inner-right-toolbar">
-						<img class="emoji-picker-icon" src="/packages/rocketchat_emojione/category_icons/people.svg">
+						<i class="emoji-picker-icon icon-people"></i>
 					</div>
 				</div>
 
@@ -57,15 +57,17 @@
 				{{#if showHighlight}}
 				<code class="inline"><span class="hidden-br"><br></span>```<span class="hidden-br"><br></span><i class="icon-level-down"></i>{{_ "multi"}}<span class="hidden-br"><br></span><i class="icon-level-down"></i>{{_ "line"}}<span class="hidden-br"><br></span><i class="icon-level-down"></i>```</code>
 				{{/if}}
+				{{#if showKatex}}
+				<span><a href="https://github.com/Khan/KaTeX/wiki/Function-Support-in-KaTeX" target="_blank">\[KaTeX\]</a></span>
+				{{/if}}
 				{{#if showMarkdown}}
 				<q><span class="hidden-br"><br></span>&gt;{{_ "quote"}}</q>
 				{{/if}}
-
 			</div>
 			{{/if}}
 			<div class="editing-commands" aria-hidden="true" dir="auto">
-				<div class="editing-commands-cancel">{{_ 'Esc_to'}} <a href="#">{{_ 'Cancel'}}</a></div>
-				<div class="editing-commands-save">{{_ 'Enter_to'}} <a href="#">{{_ 'Save_changes'}}</a></div>
+				<div class="editing-commands-cancel">{{_ 'Esc_to'}} <button type="button">{{_ 'Cancel_message_input'}}</button></div>
+				<div class="editing-commands-save">{{_ 'Enter_to'}} <button type="button">{{_ 'Save_changes'}}</button></div>
 			</div>
 		</form>
 	{{else}}

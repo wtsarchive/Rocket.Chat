@@ -3,6 +3,9 @@ Meteor.startup ->
 		id: 'jump-to-search-message'
 		icon: 'icon-right-hand'
 		i18nLabel: 'Jump_to_message'
+		context: [
+			'search'
+		]
 		action: (event, instance) ->
 			message = @_arguments[1]
 			$('.message-dropdown:visible').hide()
@@ -26,6 +29,9 @@ Template.messageSearch.helpers
 
 	ready: ->
 		return Template.instance().ready.get()
+
+	message: ->
+		return _.extend(this, { customClass: 'search' })
 
 Template.messageSearch.events
 	"keydown #message-search": (e) ->
@@ -52,15 +58,15 @@ Template.messageSearch.events
 		e.preventDefault()
 		message_id = $(e.currentTarget).closest('.message').attr('id')
 		$('.message-dropdown:visible').hide()
-		$(".search-messages-list \##{message_id} .message-dropdown").remove()
-		message = _.findWhere(t.searchResult.get()?.messages, (message) -> return message._id is message_id)
-		actions = RocketChat.MessageAction.getButtons message
+		t.$("\##{message_id} .message-dropdown").remove()
+		message = _.findWhere(t.searchResult.get()?.messages, { _id: message_id })
+		actions = RocketChat.MessageAction.getButtons message, 'search'
 		el = Blaze.toHTMLWithData Template.messageDropdown, { actions: actions }
-		$(".search-messages-list \##{message_id} .message-cog-container").append el
-		dropDown = $(".search-messages-list \##{message_id} .message-dropdown")
+		t.$("\##{message_id} .message-cog-container").append el
+		dropDown = t.$("\##{message_id} .message-dropdown")
 		dropDown.show()
-		
-	'click .load-more a': (e, t) ->
+
+	'click .load-more button': (e, t) ->
 		t.limit.set(t.limit.get() + 20)
 		t.search()
 
